@@ -1,0 +1,114 @@
+
+<%- include("partials/header.ejs") -%> 
+
+<%- include("partials/navbar.ejs") -%>
+
+<section class="vh-100 gradient-custom my-auto py-5" style="display: contents;">
+    <div class="container-fluid py-5 h-100">
+      <div class="row d-flex justify-content-center align-items-center h-100">
+        <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+          <div class="card bg-dark text-white" style="border-radius: 1rem; height: 50%;">
+            <div class="card-body p-5 text-center">
+              <div class="mb-md-5 mt-md-4 pb-5">
+                <h2 class="fw-bold mb-2 text-uppercase">SignUp</h2>
+                <p class="text-white-50 mb-5">Create your account</p>
+                <form action="/signup" method="post" enctype="multipart/form-data">
+                  <div class="form-floating mb-4 row row-cols-2">
+                    <div class="form-floating col">
+                      <input type="text" class="form-control form-control-lg text-white" id="floatingInput" name="fname" placeholder="FirstName">
+                      <label for="floatingInput" class="ps-4">First Name</label>
+                    </div>
+                    <div class="form-floating col">
+                      <input type="text" class="form-control form-control-lg text-white" id="floatingInput" name="lname" placeholder="LastName">
+                      <label for="floatingInput" class="ps-4">Last Name</label>
+                    </div>
+                  </div>
+                  <div class="form-floating mb-4 row row-cols-2">
+                    <div class="form-floating col">
+                      <input type="number" class="form-control form-control-lg text-white" id="floatingInput" name="age" placeholder="Age">
+                      <label for="floatingInput" class="ps-4">Age</label>
+                    </div>
+                    <div class="form-floating col">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="gender" value="male" id="flexRadioDefault1" checked>
+                        <label class="form-check-label" for="flexRadioDefault1">
+                          Male
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="gender" value="female" id="flexRadioDefault2">
+                        <label class="form-check-label" for="flexRadioDefault2">
+                          Female
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-floating mb-4">
+                    <input type="text" minlength="10" maxlength="10" class="form-control form-control-lg text-white" id="floatingInput" name="phone" placeholder="912345678">
+                    <label for="floatingInput">Phone Number</label>
+                  </div>
+                  <div class="form-floating mb-4">
+                    <input type="text" class="form-control form-control-lg text-white" id="floatingInput" name="quote" placeholder="Best word to describe yourself">
+                    <label for="floatingInput">Best word to describe yourself</label>
+                  </div>
+                  <div class="form-floating mb-4">
+                    <input type="text" class="form-control form-control-lg text-white" id="floatingInput" name="address" placeholder="address">
+                    <label for="floatingInput">Address</label>
+                  </div>
+                  <div class="form-floating mb-4">
+                    <input type="email" class="form-control form-control-lg text-white" id="floatingInput" name="email" placeholder="name@example.com">
+                    <label for="floatingInput">Email address</label>
+                  </div>
+                  <div class="form-floating mb-4">
+                    <input type="password" class="form-control form-control-lg text-white" id="floatingPassword" name="password" placeholder="Password">
+                    <label for="floatingPassword">Password</label>
+                  </div>
+                  <div class="form-floating mb-4">
+                    <div class="mb-3">
+                      <input class="form-control bg-dark text-white" type="file" name="file" id="formFileMultiple" multiple >
+                    </div>
+                  </div>
+                  <div class="form-floating mb-4">
+                    <input type="url" class="form-control form-control-lg text-white" id="floatingInput" name="website" placeholder="name@example.com">
+                    <label for="floatingInput"><i class="fa-solid fa-globe"></i> Website</label>
+                  </div>
+                  <div class="form-floating mb-4">
+                    <input type="url" class="form-control form-control-lg text-white" id="floatingInput" name="github" placeholder="name@example.com">
+                    <label for="floatingInput"><i class="fa-brands fa-github"></i> Github</label>
+                  </div>
+                  <div class="form-floating mb-4">
+                    <input type="url" class="form-control form-control-lg text-white" id="floatingInput" name="twitter" placeholder="name@example.com">
+                    <label for="floatingInput"><i class="fa-brands fa-twitter"></i> Twitter</label>
+                  </div>
+                  <div class="form-floating mb-4">
+                    <input type="url" class="form-control form-control-lg text-white" id="floatingInput" name="instagram" placeholder="name@example.com">
+                    <label for="floatingInput"><i class="fa-brands fa-instagram"></i> Instagram</label>
+                  </div>
+                  <div class="form-floating mb-4">
+                    <input type="url" class="form-control form-control-lg text-white" id="floatingInput" name="facebook" placeholder="name@example.com">
+                    <label for="floatingInput"><i class="fa-brands fa-facebook"></i> Facebook</label>
+                  </div>
+                  <button type="submit" class="btn btn-outline-light btn-lg px-5">Sign Up</button>
+
+              </form>
+
+                <div class="d-flex justify-content-center mt-4 pt-1">
+                  <a href="#!" class="text-white"><i class="fa-brands fa-google fa-lg"></i></a>
+                  <a href="#!" class="text-white"><i class="fa-brands fa-facebook fa-lg mx-4 px-5"></i></a>
+                  <a href="#!" class="text-white"><i class="fa-brands fa-twitter fa-lg"></i></a>
+                </div>
+
+                <div>
+                  <p class="mb-0" style="margin-top: 4rem; margin-bottom: 0;">Already have an account? <a href="/login" class="text-white-50 fw-bold">Login</a></p>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>   
+  </section> 
+
+<%- include("partials/footer.ejs") %> 

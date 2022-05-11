@@ -1,0 +1,18 @@
+body{
+    background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1));
+}
+#floatingInput{
+    background-color: #212529;
+}
+
+#floatingPassword{
+    background-color: #212529;
+}
+
+.carousel-transition-duration{
+    transition: 1000;
+}
+
+.flex{
+    flex: auto;
+}
