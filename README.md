@@ -43,4 +43,4 @@ This is a authentication project where user can register and login through OAuth
 
 * UserProfile Page
 
-    ![UserProfilePage](/Screenshot/profilePage.png)
+    ![UserProfilePage](/Screenshot/ProfilePage.png)
