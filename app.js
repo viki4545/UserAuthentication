@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
@@ -6,12 +7,9 @@ const fs = require('fs');
 const multer = require('multer');
 const path = require('path');
 const passport = require('passport');
-
-
-
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
 require("./conn");
-const User = require("./models/userRegistration");
-
 
 const port = process.env.port || 3000;
 
@@ -26,13 +24,76 @@ app.use(session({
     secret: 'treehouse loves you',
     resave: true,
     saveUninitialized: false,
-  }));
+}));
 
-  // make user ID available in templates
-app.use(function (req, res, next){
-    res.locals.currentUser = req.session.userId;
-    next();
+app.use(passport.initialize());
+app.use(passport.session());
+
+const User = require("./models/userRegistration");
+
+passport.use(User.createStrategy());
+
+passport.serializeUser(function(user, cb) {
+    process.nextTick(function() {
+      cb(null, { id: user.id, username: user.username });
+    });
   });
+  
+  passport.deserializeUser(function(user, cb) {
+    process.nextTick(function() {
+      return cb(null, user);
+    });
+  });
+
+// Google Strategy
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/google/profile",
+    userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
+  },
+  async(accessToken, refreshToken, profile, cb) => {
+    console.log(profile);
+    const newUser = {
+        googleId: profile.id,
+        firstname: profile.name.givenName,
+        lastname: profile.name.familyName,
+        username: profile.emails[0].value,
+        image: profile.photos[0].value,
+        source: "google"
+    }
+    try{
+        let user = await User.findOne({googleId: profile.id});
+        if(user){
+            console.log("User already registered!!");
+            cb(null, user)
+        }else{
+            user = await User.create(newUser)
+            console.log("Google User created successfully!!");
+            cb(null, user)
+        }
+    }catch(err){
+        console.log(err);
+    }
+    
+  }   
+));
+
+
+// Facebook Strategy
+passport.use(new FacebookStrategy({
+    clientID: process.env.FACEBOOK_CLIENT_ID,
+    clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/facebook/profile"
+  },
+  function(accessToken, refreshToken, profile, cb) {
+    console.log(profile);
+    User.findOrCreate({ facebookId: profile.id }, function (err, user) {
+      return cb(err, user);
+    });
+  }
+));
+
 
 // for image uploading
 const Storage = multer.diskStorage({
@@ -44,20 +105,48 @@ const Storage = multer.diskStorage({
 
 const upload = multer({storage: Storage}).single('file');
 
+
 // routing
 app.get("/", (req, res) => {
     res.render("home", {title: "Home"});
 });
 
+
+// google Oauth routing
+app.get("/auth/google",
+  passport.authenticate("google", { scope: ["profile","email"] })
+);
+
+app.get("/auth/google/profile",
+        passport.authenticate("google", { failureRedirect: "/signup" }),(req, res) => {
+        res.redirect("/profile");
+});
+
+
+// facebook oauth routing
+app.get('/auth/facebook',
+  passport.authenticate('facebook', {scope: ["profile", "email"]}));
+
+app.get('/auth/facebook/profile',
+  passport.authenticate('facebook', { failureRedirect: '/signup' }),(req, res) => {
+    // Successful authentication, redirect home.
+    res.redirect('/profile');
+  });
+
 app.get("/profile", (req, res) => {
-    User.findById(req.session.userId)
-        .exec((err, foundUser) => {
-            if(err){
-                console.log(err);
-            }else{
-                res.render("profile", {title: "UserProfile", records: foundUser});
-            }
-        });
+       if(req.isAuthenticated()){
+            User.findById(req.user.id, (err, foundUser) => {
+                if(err){
+                    console.log(err);
+                }else{  
+                    if(foundUser){
+                        res.render("profile", {title: "UserProfile", records: foundUser});
+                    } 
+                }
+            });
+       }else{
+           res.redirect("/login");
+       }
 });
 
 app.get("/login", (req, res) => {
@@ -66,21 +155,21 @@ app.get("/login", (req, res) => {
 
 
 app.post("/login", (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
-    User.findOne({email: username, password: password}, (err, foundUser) => {
-        if(!err){
-            if(foundUser.email === username){
-                if(foundUser.password === password){
-                    req.session.userId = foundUser._id;
-                    res.redirect("/profile");
-                    console.log("User loggedin successfully!!");
-                }
-            }
-        }else{
-            console.log(err);
+   passport.authenticate("local", (err, user, info) =>{
+       if(err){
+           console.log(err);
         }
-    });
+       if (!user) { 
+             res.redirect('/login'); 
+        }
+        req.logIn(user, (err) => {
+         if (err) { 
+             console.log(err); 
+            }
+            return res.redirect('/profile');
+            console.log("User login successfully!!");
+       });
+     })(req, res);
 });
 
 app.get("/signup", (req, res) => {
@@ -89,15 +178,14 @@ app.get("/signup", (req, res) => {
 
 // create a new user in database
 app.post("/signup",  upload, (req, res) => {
-    const newUser = new User({
+    User.register({
         firstname: req.body.fname,
         lastname: req.body.lname,
         age: req.body.age,
         gender: req.body.gender,
         phone: req.body.phone,
         quote: req.body.quote,
-        email: req.body.email,
-        password: req.body.password,
+        username: req.body.username,
         address: req.body.address,
         image: req.file.filename,
         link: {
@@ -107,15 +195,22 @@ app.post("/signup",  upload, (req, res) => {
             instagram: req.body.instagram,
             facebook: req.body.facebook
         }
+    },req.body.password, (err, user) => {
+        if(err){
+            console.log(err);
+        }else{
+            passport.authenticate("local")(req,res,() => {
+                res.redirect("/profile")
+                console.log("User registered successfully!!");
+            });
+        }
     });
-    newUser.save((err,doc)=>{
-        if(err) throw err;
-        else console.log("User register successfully!!");
-    });
-    res.redirect("/login");
 });
 
-
+app.post("/logout", (req, res) => {
+    req.logout();
+    res.redirect("/");
+});
 
 app.listen(port, () => {
     console.log(`Server started at port no ${port}`);

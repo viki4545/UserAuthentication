@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const passportLocalMongoose = require('passport-local-mongoose');
+const findOrCreate = require("mongoose-findorcreate");
 
 const userSchema = new mongoose.Schema({
     firstname: {
@@ -11,21 +13,21 @@ const userSchema = new mongoose.Schema({
     },
     age:{
         type: Number,
-        requried: true
     },
     gender:{
         type: String,
-        requried: true
     },
     phone:{
         type: String,
-        requried: true,
         unique: true
     },
     quote:{
         type: String
     },
-    email:{
+    googleId: {
+        type: String
+    },
+    username:{
         type: String,
         required: true,
         unique: true
@@ -39,6 +41,10 @@ const userSchema = new mongoose.Schema({
     },
     image: {
         type: String
+    },
+    source: {
+        type: String,
+        required: [true, "source not specified"]
     },
     link:{
             website: {
@@ -59,5 +65,7 @@ const userSchema = new mongoose.Schema({
         }
 });
 
+userSchema.plugin(passportLocalMongoose);
+userSchema.plugin(findOrCreate);
 const User = new mongoose.model("User", userSchema);
 module.exports = User;
