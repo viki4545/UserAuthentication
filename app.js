@@ -35,7 +35,7 @@ passport.use(User.createStrategy());
 
 passport.serializeUser(function(user, cb) {
     process.nextTick(function() {
-      cb(null, { id: user.id, username: user.username });
+      cb(null, { id: user.id, username: user.username});
     });
   });
   
@@ -59,8 +59,7 @@ passport.use(new GoogleStrategy({
         firstname: profile.name.givenName,
         lastname: profile.name.familyName,
         username: profile.emails[0].value,
-        image: profile.photos[0].value,
-        source: "google"
+        image: profile.photos[0].value
     }
     try{
         let user = await User.findOne({googleId: profile.id});
@@ -84,13 +83,31 @@ passport.use(new GoogleStrategy({
 passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_CLIENT_ID,
     clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-    callbackURL: "http://localhost:3000/auth/facebook/profile"
+    callbackURL: "http://localhost:3000/auth/facebook/profile",
+    profileFields: ['id', 'displayName','name','photos', 'emails']
   },
-  function(accessToken, refreshToken, profile, cb) {
+  async(accessToken, refreshToken, profile, cb) => {
     console.log(profile);
-    User.findOrCreate({ facebookId: profile.id }, function (err, user) {
-      return cb(err, user);
-    });
+    const newUser = {
+        facebookId: profile.id,
+        firstname: profile.name.givenName,
+        lastname: profile.name.familyName,
+        username: profile.emails[0].value,
+        image: profile.photos[0].value
+    }
+    try{
+        let user = await User.findOne({facebookId: profile.id});
+        if(user){
+            console.log("User already registered!!");
+            cb(null, user)
+        }else{
+            user = await User.create(newUser)
+            console.log("Facebook User created successfully!!");
+            cb(null, user)
+        }
+    }catch(err){
+        console.log(err);
+    }
   }
 ));
 
@@ -125,7 +142,7 @@ app.get("/auth/google/profile",
 
 // facebook oauth routing
 app.get('/auth/facebook',
-  passport.authenticate('facebook', {scope: ["profile", "email"]}));
+  passport.authenticate('facebook', {scope: ["email"]}));
 
 app.get('/auth/facebook/profile',
   passport.authenticate('facebook', { failureRedirect: '/signup' }),(req, res) => {
@@ -147,6 +164,7 @@ app.get("/profile", (req, res) => {
        }else{
            res.redirect("/login");
        }
+    // res.send("you are a valid user");
 });
 
 app.get("/login", (req, res) => {
@@ -188,13 +206,6 @@ app.post("/signup",  upload, (req, res) => {
         username: req.body.username,
         address: req.body.address,
         image: req.file.filename,
-        link: {
-            website: req.body.website,
-            github: req.body.github,
-            twitter: req.body.twitter,
-            instagram: req.body.instagram,
-            facebook: req.body.facebook
-        }
     },req.body.password, (err, user) => {
         if(err){
             console.log(err);
@@ -206,6 +217,46 @@ app.post("/signup",  upload, (req, res) => {
         }
     });
 });
+
+app.get("/update", async(req, res) => {
+    try{
+        const id = req.query.id;
+
+        const userData = await User.findById({_id:id});
+
+        if(userData){
+            res.render("update", {records:userData, title: "Updateprofile"});
+        }else{
+            res.redirect("/login");
+        }
+    }catch(error){
+        console.log(error);
+    }
+    
+});
+
+app.post("/update",  upload, async(req, res) => {
+
+    try {
+        const userData = User.findByIdAndUpdate(req.body.user_id, 
+            {$set:{
+                firstname: req.body.fname,
+                lastname: req.body.lname,
+                age: req.body.age,
+                gender: req.body.gender, 
+                username: req.body.username, 
+                phone: req.body.phone, 
+                quote: req.body.quote,
+                address: req.body.address,
+                image: req.file.filename
+         }});
+    } catch (error) {
+        console.log(error);
+    }
+   
+     console.log("User updated successfully!!");   
+     res.redirect("/profile");
+   });
 
 app.post("/logout", (req, res) => {
     req.logout();

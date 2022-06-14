@@ -27,6 +27,9 @@ const userSchema = new mongoose.Schema({
     googleId: {
         type: String
     },
+    facebookId: {
+        type: String
+    },
     username:{
         type: String,
         required: true,
@@ -44,25 +47,7 @@ const userSchema = new mongoose.Schema({
     },
     source: {
         type: String,
-        required: [true, "source not specified"]
-    },
-    link:{
-            website: {
-                type: String
-            },
-            github: {
-                type: String
-            },
-            twitter: {
-                type: String
-            },
-            instagram: {
-                type: String
-            },
-            facebook: {
-                type: String
-            }
-        }
+    }
 });
 
 userSchema.plugin(passportLocalMongoose);
